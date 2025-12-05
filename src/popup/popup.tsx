@@ -5,21 +5,36 @@ function Popup() {
   const [name, setName] = useState<string | null>(null);
 
   const handleLogin = () => {
-    chrome.runtime.sendMessage({ type: "LOGIN_GOOGLE" }, (res) => {
+    chrome.runtime.sendMessage({ type: "LOGIN_GOOGLE" }, async (res) => {
       if (!res?.success) return alert("Login failed");
 
       const token = res.token;
 
-      fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((r) => r.json())
-        .then((userInfo) => setName(userInfo.name))
-        .catch((err) => {
-          console.error(err);
-          alert("Failed to fetch user info");
-        });
+      const userName = await fetchUserInfo(token);
+      if (userName) setName(userName);
     });
+  };
+
+  const handleLogout = () => {
+    chrome.runtime.sendMessage({ type: "LOGOUT_GOOGLE" }, (res) => {
+      if (!res?.success) return alert("Logout failed");
+
+      setName(null);
+    });
+  };
+
+  const fetchUserInfo = async (token: string) => {
+    try {
+      const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const userInfo = await res.json();
+      console.log(userInfo);
+      return userInfo.name;
+    } catch (error) {
+      console.error(error);
+      alert("Failed to fetch user info");
+    }
   };
 
   useEffect(() => {
@@ -47,14 +62,19 @@ function Popup() {
   return (
     <div style={{ padding: 16 }}>
       {name ? (
-        <h2>
-          {new Date().getHours() < 12
-            ? "Good morning"
-            : new Date().getHours() < 18
-            ? "Good afternoon"
-            : "Good evening"}
-          , {name} 👋
-        </h2>
+        <>
+          <h2>
+            {new Date().getHours() < 12
+              ? "Good morning"
+              : new Date().getHours() < 18
+              ? "Good afternoon"
+              : "Good evening"}
+            , {name} 👋
+          </h2>
+          <button onClick={handleLogout} style={{ padding: 8, width: "100%" }}>
+            Logout
+          </button>
+        </>
       ) : (
         <button onClick={handleLogin} style={{ padding: 8, width: "100%" }}>
           Login with Google
