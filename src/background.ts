@@ -10,6 +10,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         return;
       }
 
+      chrome.storage.local.set({ INBOX_TOKEN: token }, () => {
+        sendResponse({ success: true, token });
+      });
+
       sendResponse({ success: true, token });
     });
 

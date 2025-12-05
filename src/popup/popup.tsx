@@ -1,12 +1,11 @@
 import { createRoot } from "react-dom/client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function Popup() {
   const [name, setName] = useState<string | null>(null);
 
   const handleLogin = () => {
     chrome.runtime.sendMessage({ type: "LOGIN_GOOGLE" }, (res) => {
-      console.log("Button Clicked");
       if (!res?.success) return alert("Login failed");
 
       const token = res.token;
@@ -23,10 +22,31 @@ function Popup() {
     });
   };
 
+  useEffect(() => {
+    chrome.storage.local.get(["INBOX_TOKEN"], async (res) => {
+      if (!res.INBOX_TOKEN) return;
+
+      const token = res.INBOX_TOKEN;
+
+      try {
+        const userInfo = await fetch(
+          "https://www.googleapis.com/oauth2/v3/userinfo",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        ).then((r) => r.json());
+
+        setName(userInfo.name);
+      } catch (error) {
+        console.error(error);
+        chrome.storage.local.remove(["INBOX_TOKEN"]);
+      }
+    });
+  }, []);
+
   return (
     <div style={{ padding: 16 }}>
       {name ? (
-        // Compute greeting based on time
         <h2>
           {new Date().getHours() < 12
             ? "Good morning"
@@ -44,6 +64,5 @@ function Popup() {
   );
 }
 
-// Mount React
 const root = document.getElementById("root");
 if (root) createRoot(root).render(<Popup />);
