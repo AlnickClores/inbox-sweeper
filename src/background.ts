@@ -46,4 +46,61 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
     return true;
   }
+
+  if (message.type === "SCAN_INBOX") {
+    chrome.storage.local.get(["INBOX_TOKEN"], async (res) => {
+      const token = res.INBOX_TOKEN;
+      if (!token) {
+        sendResponse({ success: false, error: "Not logged in" });
+        return;
+      }
+
+      try {
+        const list = await fetch(
+          "https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=100",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        ).then((r) => r.json());
+
+        if (!list.messages) {
+          sendResponse({ success: true, senders: [] });
+          return;
+        }
+
+        const sendersMap: Record<string, number> = {};
+
+        for (const msg of list.messages) {
+          try {
+            const detail = await fetch(
+              `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}?format=metadata&metadataHeaders=From`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            ).then((r) => r.json());
+
+            const header = detail.payload?.headers?.find(
+              (h: any) => h.name === "From"
+            );
+            if (!header?.value) continue;
+
+            const from = header.value;
+
+            sendersMap[from] = (sendersMap[from] || 0) + 1;
+          } catch (err) {
+            continue;
+          }
+        }
+
+        sendResponse({
+          success: true,
+          senders: sendersMap,
+        });
+      } catch (err: any) {
+        sendResponse({ success: false, error: err.message });
+      }
+    });
+
+    return true;
+  }
 });

@@ -1,8 +1,13 @@
 import { createRoot } from "react-dom/client";
 import { useState, useEffect } from "react";
 
+type Sender = { email: string; count: number };
+
 function Popup() {
   const [name, setName] = useState<string | null>(null);
+  const [senders, setSenders] = useState<{ email: string; count: number }[]>(
+    []
+  );
 
   const handleLogin = () => {
     chrome.runtime.sendMessage({ type: "LOGIN_GOOGLE" }, async (res) => {
@@ -35,6 +40,19 @@ function Popup() {
       console.error(error);
       alert("Failed to fetch user info");
     }
+  };
+
+  const handleScanInbox = () => {
+    chrome.runtime.sendMessage({ type: "SCAN_INBOX" }, (res) => {
+      if (!res?.success) return alert("Failed to scan inbox");
+
+      const sendersMap = res.senders as Record<string, number>;
+
+      const arr: Sender[] = Object.entries(sendersMap)
+        .map(([email, count]) => ({ email, count }))
+        .sort((a, b) => b.count - a.count);
+      setSenders(arr);
+    });
   };
 
   useEffect(() => {
@@ -71,6 +89,26 @@ function Popup() {
               : "Good evening"}
             , {name} 👋
           </h2>
+          <div>
+            {senders.length > 0 && (
+              <>
+                <h3>Top Senders:</h3>
+                <ul>
+                  {senders.map(({ email, count }) => (
+                    <li key={email}>
+                      {email}: {count}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
+          <button
+            onClick={handleScanInbox}
+            style={{ padding: 8, width: "100%" }}
+          >
+            Scan Inbox
+          </button>
           <button onClick={handleLogout} style={{ padding: 8, width: "100%" }}>
             Logout
           </button>
