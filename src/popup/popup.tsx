@@ -8,6 +8,8 @@ function Popup() {
   const [senders, setSenders] = useState<{ email: string; count: number }[]>(
     []
   );
+  const [pageToken, setPageToken] = useState<string | undefined>(undefined);
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = () => {
     chrome.runtime.sendMessage({ type: "LOGIN_GOOGLE" }, async (res) => {
@@ -28,6 +30,26 @@ function Popup() {
     });
   };
 
+  const loadMore = () => {
+    if (loading) return;
+    setLoading(true);
+
+    chrome.runtime.sendMessage(
+      { type: "SCAN_INBOX_CHUNK", pageToken, chunkSize: 10 },
+      (res) => {
+        setLoading(false);
+        if (!res?.success) return alert("Failed to load inbox");
+
+        const arr = Object.entries(res.sendersMap as Record<string, number>)
+          .map(([email, count]) => ({ email, count }))
+          .sort((a, b) => b.count - a.count);
+
+        setSenders((prev) => [...prev, ...arr]);
+        setPageToken(res.nextPageToken);
+      }
+    );
+  };
+
   const fetchUserInfo = async (token: string) => {
     try {
       const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
@@ -43,15 +65,16 @@ function Popup() {
   };
 
   const handleScanInbox = () => {
-    chrome.runtime.sendMessage({ type: "SCAN_INBOX" }, (res) => {
+    chrome.runtime.sendMessage({ type: "SCAN_INBOX_CHUNK" }, (res) => {
       if (!res?.success) return alert("Failed to scan inbox");
 
-      const sendersMap = res.senders as Record<string, number>;
+      const sendersMap = res.sendersMap as Record<string, number>;
 
       const arr: Sender[] = Object.entries(sendersMap)
         .map(([email, count]) => ({ email, count }))
         .sort((a, b) => b.count - a.count);
       setSenders(arr);
+      setPageToken(res.nextPageToken);
     });
   };
 
@@ -150,6 +173,9 @@ function Popup() {
                 </div>
               </>
             )}
+            <button onClick={loadMore} disabled={loading || !pageToken}>
+              {loading ? "Loading..." : pageToken ? "Load More" : "All Loaded"}
+            </button>
           </div>
 
           <button
