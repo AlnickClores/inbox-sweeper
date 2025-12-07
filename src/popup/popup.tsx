@@ -89,20 +89,69 @@ function Popup() {
               : "Good evening"}
             , {name} 👋
           </h2>
-          <div>
+          <div style={{ marginTop: "16px" }}>
             {senders.length > 0 && (
               <>
-                <h3>Top Senders:</h3>
-                <ul>
+                <h3
+                  style={{
+                    fontSize: "1.1rem",
+                    fontWeight: 600,
+                    marginBottom: "8px",
+                  }}
+                >
+                  Top Senders
+                </h3>
+
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "8px",
+                  }}
+                >
                   {senders.map(({ email, count }) => (
-                    <li key={email}>
-                      {email}: {count}
-                    </li>
+                    <button
+                      key={email}
+                      style={{
+                        padding: "6px 12px",
+                        borderRadius: "20px",
+                        border: "1px solid #d0d0d0",
+                        background: "#f5f5f5",
+                        fontSize: "0.9rem",
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
+                        transition: "all 0.2s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        const btn = e.currentTarget as HTMLButtonElement;
+                        btn.style.background = "#e9e9e9";
+                        btn.style.borderColor = "#c4c4c4";
+                      }}
+                      onMouseLeave={(e) => {
+                        const btn = e.currentTarget as HTMLButtonElement;
+                        btn.style.background = "#f5f5f5";
+                        btn.style.borderColor = "#d0d0d0";
+                      }}
+                    >
+                      <span style={{ fontWeight: 500 }}>{email}</span>
+                      <span
+                        style={{
+                          marginLeft: "6px",
+                          color: "#666",
+                          fontSize: "0.8rem",
+                        }}
+                      >
+                        ({count})
+                      </span>
+                    </button>
                   ))}
-                </ul>
+                </div>
               </>
             )}
           </div>
+
           <button
             onClick={handleScanInbox}
             style={{ padding: 8, width: "100%" }}
