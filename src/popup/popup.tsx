@@ -10,6 +10,10 @@ function Popup() {
   );
   const [pageToken, setPageToken] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const longPressThreshold: number = 250;
+  let longPressTriggered = false;
 
   const handleLogin = () => {
     chrome.runtime.sendMessage({ type: "LOGIN_GOOGLE" }, async (res) => {
@@ -78,6 +82,44 @@ function Popup() {
     });
   };
 
+  const handleLongPressStart = () => {
+    longPressTriggered = false;
+
+    setTimeout(() => {
+      longPressTriggered = true;
+      setSelectionMode(true);
+    }, longPressThreshold);
+  };
+
+  const handleLongPressEnd = (email: string) => {
+    // Long press triggered → only select, no click will fire
+    if (longPressTriggered) {
+      selectEmail(email);
+    }
+  };
+
+  const handleClick = (email: string) => {
+    // Ignore click if it came from a long press
+    if (longPressTriggered) return;
+
+    if (selectionMode) {
+      selectEmail(email);
+    }
+  };
+
+  const selectEmail = (email: string) => {
+    setSelectedItems(
+      (prev) =>
+        prev.includes(email)
+          ? prev.filter((e) => e !== email) // unselect
+          : [...prev, email] // select
+    );
+  };
+
+  useEffect(() => {
+    console.log("Selected items:", selectedItems);
+  }, [selectedItems]);
+
   useEffect(() => {
     chrome.storage.local.get(["INBOX_TOKEN"], async (res) => {
       if (!res.INBOX_TOKEN) return;
@@ -134,6 +176,9 @@ function Popup() {
                 >
                   {senders.map(({ email, count }) => (
                     <button
+                      onMouseDown={() => handleLongPressStart()}
+                      onMouseUp={() => handleLongPressEnd(email)}
+                      onClick={() => handleClick(email)}
                       key={email}
                       style={{
                         padding: "6px 12px",
@@ -170,6 +215,16 @@ function Popup() {
                       </span>
                     </button>
                   ))}
+                  {selectionMode && (
+                    <button
+                      onClick={() => {
+                        setSelectedItems([]);
+                        setSelectionMode(false);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  )}
                 </div>
               </>
             )}
