@@ -228,7 +228,8 @@ function Popup() {
                           (res) => {
                             if (!res?.success)
                               return alert("Failed to delete emails");
-                            alert(`Deleted ${res.trashedCount} emails`);
+                            console.log(res);
+                            alert(`Emails successfully deleted: ${res.count}`);
                           }
                         );
                       }}

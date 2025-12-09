@@ -56,7 +56,7 @@ async function fetchMessagesFromSender(token: string, sender: string) {
     const url = new URL(
       "https://gmail.googleapis.com/gmail/v1/users/me/messages"
     );
-    url.searchParams.set("q", `from:${sender}`);
+    url.searchParams.set("q", `from:("${sender}")`);
     if (pageToken) url.searchParams.set("pageToken", pageToken);
 
     const res = await fetch(url.toString(), {
