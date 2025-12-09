@@ -75,13 +75,20 @@ async function fetchMessagesFromSender(token: string, sender: string) {
   return messages;
 }
 
-async function trashMessage(token: string, messageId: string) {
-  console.log("Trashing message ID:", messageId);
+async function trashMessage(token: string, messageIds: string[]) {
+  console.log("Trashing message ID:", messageIds);
   const res = await fetch(
-    `https://gmail.googleapis.com/gmail/v1/users/me/messages/${messageId}/trash`,
+    `https://gmail.googleapis.com/gmail/v1/users/me/messages/batchModify`,
     {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ids: messageIds,
+        addLabelIds: ["TRASH"],
+      }),
     }
   );
 
@@ -89,6 +96,8 @@ async function trashMessage(token: string, messageId: string) {
     const err = await res.json();
     throw new Error(err.error?.message || "Failed to trash email");
   }
+
+  return messageIds.length;
 }
 
 async function scanInbox(token: string, pageToken?: string, chunkSize = 10) {
@@ -196,24 +205,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         }
 
         try {
-          let allTrashed = 0;
+          const allIds: string[] = [];
 
           for (const sender of message.senders) {
-            console.log("Processing sender:", sender);
             const ids = await fetchMessagesFromSender(token, sender);
-            console.log(`Found ${ids.length} messages from ${sender}`);
-
-            for (const id of ids) {
-              await trashMessage(token, id);
-              allTrashed++;
-            }
+            allIds.push(...ids);
           }
-
-          console.log(`Successfully trashed ${allTrashed} emails`);
-          sendResponse({
-            success: true,
-            trashedCount: allTrashed,
-          });
+          const count = await trashMessage(token, allIds);
+          sendResponse({ success: true, count });
         } catch (error: any) {
           console.error("Error in TRASH_EMAILS:", error);
           sendResponse({ success: false, error: error.message });
