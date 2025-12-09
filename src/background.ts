@@ -12,6 +12,11 @@ interface SendersMap {
   [email: string]: number;
 }
 
+function extractEmail(fromHeader: string): string {
+  const match = fromHeader.match(/<(.+?)>/);
+  return match ? match[1] : fromHeader.trim();
+}
+
 async function fetchMessageChunk(
   token: string,
   pageToken?: string,
@@ -42,6 +47,50 @@ async function fetchMessageMetadata(token: string, messageId: string) {
   return header?.value ?? null;
 }
 
+async function fetchMessagesFromSender(token: string, sender: string) {
+  console.log("Fetching messages from sender:", sender);
+  let messages: string[] = [];
+  let pageToken = undefined;
+
+  while (true) {
+    const url = new URL(
+      "https://gmail.googleapis.com/gmail/v1/users/me/messages"
+    );
+    url.searchParams.set("q", `from:${sender}`);
+    if (pageToken) url.searchParams.set("pageToken", pageToken);
+
+    const res = await fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data = await res.json();
+    if (data.messages) {
+      messages.push(...data.messages.map((m: any) => m.id));
+    }
+
+    if (!data.nextPageToken) break;
+    pageToken = data.nextPageToken;
+  }
+
+  return messages;
+}
+
+async function trashMessage(token: string, messageId: string) {
+  console.log("Trashing message ID:", messageId);
+  const res = await fetch(
+    `https://gmail.googleapis.com/gmail/v1/users/me/messages/${messageId}/trash`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error?.message || "Failed to trash email");
+  }
+}
+
 async function scanInbox(token: string, pageToken?: string, chunkSize = 10) {
   console.log("Scanning inbox with token:", token, "pageToken:", pageToken);
   const list = await fetchMessageChunk(token, pageToken, chunkSize);
@@ -51,7 +100,8 @@ async function scanInbox(token: string, pageToken?: string, chunkSize = 10) {
   for (const msg of list.messages ?? []) {
     const from = await fetchMessageMetadata(token, msg.id);
     if (!from) continue;
-    sendersMap[from] = (sendersMap[from] || 0) + 1;
+    const email = extractEmail(from);
+    sendersMap[email] = (sendersMap[email] || 0) + 1;
   }
   console.log("Current sendersMap:", sendersMap);
   return { sendersMap, nextPageToken: list.nextPageToken };
@@ -126,6 +176,47 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           sendResponse({ success: true, ...result });
         } catch (err: any) {
           sendResponse({ success: false, error: err.message });
+        }
+      }
+    );
+
+    return true;
+  }
+
+  if (message.type === "TRASH_EMAILS") {
+    console.log("TRASH_EMAILS message received", "senders:", message.senders);
+    chrome.storage.local.get(
+      "INBOX_TOKEN",
+      async (res: { INBOX_TOKEN?: string }) => {
+        const token = res.INBOX_TOKEN;
+        if (!token) {
+          console.error("No token found");
+          sendResponse({ success: false, error: "Not logged in" });
+          return;
+        }
+
+        try {
+          let allTrashed = 0;
+
+          for (const sender of message.senders) {
+            console.log("Processing sender:", sender);
+            const ids = await fetchMessagesFromSender(token, sender);
+            console.log(`Found ${ids.length} messages from ${sender}`);
+
+            for (const id of ids) {
+              await trashMessage(token, id);
+              allTrashed++;
+            }
+          }
+
+          console.log(`Successfully trashed ${allTrashed} emails`);
+          sendResponse({
+            success: true,
+            trashedCount: allTrashed,
+          });
+        } catch (error: any) {
+          console.error("Error in TRASH_EMAILS:", error);
+          sendResponse({ success: false, error: error.message });
         }
       }
     );

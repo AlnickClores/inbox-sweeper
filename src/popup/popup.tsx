@@ -92,14 +92,12 @@ function Popup() {
   };
 
   const handleLongPressEnd = (email: string) => {
-    // Long press triggered → only select, no click will fire
     if (longPressTriggered) {
       selectEmail(email);
     }
   };
 
   const handleClick = (email: string) => {
-    // Ignore click if it came from a long press
     if (longPressTriggered) return;
 
     if (selectionMode) {
@@ -108,11 +106,8 @@ function Popup() {
   };
 
   const selectEmail = (email: string) => {
-    setSelectedItems(
-      (prev) =>
-        prev.includes(email)
-          ? prev.filter((e) => e !== email) // unselect
-          : [...prev, email] // select
+    setSelectedItems((prev) =>
+      prev.includes(email) ? prev.filter((e) => e !== email) : [...prev, email]
     );
   };
 
@@ -223,6 +218,22 @@ function Popup() {
                       }}
                     >
                       Cancel
+                    </button>
+                  )}
+                  {selectionMode && selectedItems.length > 0 && (
+                    <button
+                      onClick={() => {
+                        chrome.runtime.sendMessage(
+                          { type: "TRASH_EMAILS", senders: selectedItems },
+                          (res) => {
+                            if (!res?.success)
+                              return alert("Failed to delete emails");
+                            alert(`Deleted ${res.trashedCount} emails`);
+                          }
+                        );
+                      }}
+                    >
+                      Delete Selected
                     </button>
                   )}
                 </div>
