@@ -1,7 +1,15 @@
 import { createRoot } from "react-dom/client";
 import { useState, useEffect } from "react";
+import Filter from "./components/Filter";
 
 type Sender = { email: string; count: number };
+
+interface CachedMessage {
+  id: string;
+  from: string;
+  date: number;
+  unread: boolean;
+}
 
 function Popup() {
   const [name, setName] = useState<string | null>(null);
@@ -12,8 +20,26 @@ function Popup() {
   const [loading, setLoading] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [cachedEmails, setCachedEmails] = useState<CachedMessage[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
   const longPressThreshold: number = 250;
   let longPressTriggered = false;
+
+  useEffect(() => {
+    console.log("Loading cached emails...");
+    chrome.storage.local.get("INBOX_DATA", (res) => {
+      if (!res.INBOX_DATA) return;
+
+      const emails = res.INBOX_DATA as CachedMessage[];
+      console.log("Cached emails loaded:", emails);
+
+      if (emails) {
+        const sortedEmailsDescending = emails.sort((a, b) => b.date - a.date);
+        const top10 = sortedEmailsDescending.slice(0, 10);
+        setCachedEmails(top10);
+      }
+    });
+  }, [refreshKey]);
 
   const handleLogin = () => {
     chrome.runtime.sendMessage({ type: "LOGIN_GOOGLE" }, async (res) => {
@@ -69,16 +95,26 @@ function Popup() {
   };
 
   const handleScanInbox = () => {
-    chrome.runtime.sendMessage({ type: "SCAN_INBOX_CHUNK" }, (res) => {
+    chrome.runtime.sendMessage({ type: "SCAN_INBOX" }, (res) => {
       if (!res?.success) return alert("Failed to scan inbox");
 
-      const sendersMap = res.sendersMap as Record<string, number>;
+      chrome.storage.local.get("INBOX_DATA", (data) => {
+        const emails = data.INBOX_DATA as CachedMessage[];
+        if (!emails || emails.length === 0) return;
 
-      const arr: Sender[] = Object.entries(sendersMap)
-        .map(([email, count]) => ({ email, count }))
-        .sort((a, b) => b.count - a.count);
-      setSenders(arr);
-      setPageToken(res.nextPageToken);
+        const sendersMap: Record<string, number> = {};
+        emails.forEach((msg) => {
+          sendersMap[msg.from] = (sendersMap[msg.from] || 0) + 1;
+        });
+
+        const arr: Sender[] = Object.entries(sendersMap)
+          .map(([email, count]) => ({ email, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 10);
+
+        setRefreshKey((prev) => prev + 1);
+        setSenders(arr);
+      });
     });
   };
 
@@ -129,6 +165,7 @@ function Popup() {
           }
         ).then((r) => r.json());
 
+        console.log("User Info:", userInfo);
         setName(userInfo.name);
       } catch (error) {
         console.error(error);
@@ -150,7 +187,7 @@ function Popup() {
             , {name} 👋
           </h2>
           <div style={{ marginTop: "16px" }}>
-            {senders.length > 0 && (
+            {cachedEmails.length > 0 && (
               <>
                 <h3
                   style={{
@@ -161,6 +198,8 @@ function Popup() {
                 >
                   Top Senders
                 </h3>
+
+                <Filter />
 
                 <div
                   style={{
@@ -210,6 +249,15 @@ function Popup() {
                       </span>
                     </button>
                   ))}
+
+                  <div>
+                    <h1>Cached Emails</h1>
+                    {cachedEmails.map((email) => (
+                      <button key={email.id}>
+                        <p>{email.from}</p>
+                      </button>
+                    ))}
+                  </div>
                   {selectionMode && (
                     <button
                       onClick={() => {

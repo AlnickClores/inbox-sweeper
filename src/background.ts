@@ -17,6 +17,13 @@ function extractEmail(fromHeader: string): string {
   return match ? match[1] : fromHeader.trim();
 }
 
+interface CachedMessage {
+  id: string;
+  from: string;
+  date: string;
+  unread: boolean;
+}
+
 async function fetchMessageChunk(
   token: string,
   pageToken?: string,
@@ -36,6 +43,41 @@ async function fetchMessageChunk(
   return data;
 }
 
+async function fetchAllMessages(token: string): Promise<CachedMessage[]> {
+  let allInbox: CachedMessage[] = [];
+  let pageToken: string | undefined = undefined;
+
+  while (true) {
+    const url = new URL(
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages`
+    );
+    url.searchParams.set("q", "in:inbox");
+    url.searchParams.set("maxResults", "100");
+    if (pageToken) url.searchParams.set("pageToken", pageToken);
+
+    const res = await fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data: GmailListResponse = await res.json();
+
+    if (data.messages && data.messages.length > 0) {
+      const metadataPromises = data.messages.map((msg) =>
+        fetchMessageMetadata(token, msg.id)
+      );
+      const metadataResults = await Promise.all(metadataPromises);
+      allInbox.push(
+        ...metadataResults.filter((m): m is CachedMessage => m !== null)
+      );
+    }
+
+    if (!data.nextPageToken) break;
+    pageToken = data.nextPageToken;
+  }
+
+  return allInbox;
+}
+
 async function fetchMessageMetadata(token: string, messageId: string) {
   console.log("Fetching metadata for message ID:", messageId);
   const res = await fetch(
@@ -44,7 +86,15 @@ async function fetchMessageMetadata(token: string, messageId: string) {
   );
   const data = await res.json();
   const header = data.payload?.headers?.find((h: any) => h.name === "From");
-  return header?.value ?? null;
+
+  if (!header?.value) return null;
+
+  const cleanEmail = extractEmail(header.value);
+
+  return {
+    id: messageId,
+    from: cleanEmail,
+  };
 }
 
 async function fetchMessagesFromSender(token: string, sender: string) {
@@ -109,7 +159,7 @@ async function scanInbox(token: string, pageToken?: string, chunkSize = 10) {
   for (const msg of list.messages ?? []) {
     const from = await fetchMessageMetadata(token, msg.id);
     if (!from) continue;
-    const email = extractEmail(from);
+    const email = extractEmail(from.from);
     sendersMap[email] = (sendersMap[email] || 0) + 1;
   }
   console.log("Current sendersMap:", sendersMap);
@@ -161,6 +211,61 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         sendResponse({ success: false, error });
       }
     });
+
+    return true;
+  }
+
+  if (message.type === "SCAN_INBOX") {
+    console.log("SCAN_INBOX message received");
+    chrome.storage.local.get(
+      "INBOX_TOKEN",
+      async (res: { INBOX_TOKEN?: string }) => {
+        const token = res.INBOX_TOKEN;
+        if (!token) {
+          sendResponse({ success: false, error: "Not logged in" });
+          return;
+        }
+
+        try {
+          console.log("Starting to scan inbox...");
+
+          const scannedEmails = await fetchAllMessages(token);
+
+          chrome.storage.local.set({
+            INBOX_DATA: scannedEmails,
+            LAST_SCAN: Date.now(),
+          });
+
+          const senderCount: Record<string, number> = {};
+          scannedEmails.forEach((email) => {
+            senderCount[email.from] = (senderCount[email.from] || 0) + 1;
+          });
+
+          console.log(
+            `Inbox scan complete: ${scannedEmails.length} emails scanned.`
+          );
+
+          const sorted: { email: string; count: number }[] = Object.entries(
+            senderCount
+          )
+            .map(([email, count]) => ({
+              email,
+              count,
+            }))
+            .sort((a, b) => b.count - a.count);
+
+          console.log("Top senders:", sorted.slice(0, 10));
+          sendResponse({
+            success: true,
+            count: scannedEmails.length,
+            senderCount: sorted,
+          });
+        } catch (error) {
+          console.error("Error scanning inbox:", error);
+          sendResponse({ success: false, error });
+        }
+      }
+    );
 
     return true;
   }
