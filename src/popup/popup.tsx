@@ -1,6 +1,8 @@
 import { createRoot } from "react-dom/client";
 import { useState, useEffect } from "react";
 import Filter from "./components/Filter";
+import styles from "./styles/emails.module.css";
+import Header from "./components/Header";
 
 type Sender = { email: string; count: number };
 
@@ -178,14 +180,8 @@ function Popup() {
     <div style={{ padding: 16 }}>
       {name ? (
         <>
-          <h2>
-            {new Date().getHours() < 12
-              ? "Good morning"
-              : new Date().getHours() < 18
-              ? "Good afternoon"
-              : "Good evening"}
-            , {name} 👋
-          </h2>
+          <Header name={name} handleScanInbox={handleScanInbox} />
+
           <div style={{ marginTop: "16px" }}>
             {cachedEmails.length > 0 && (
               <>
@@ -201,13 +197,7 @@ function Popup() {
 
                 <Filter />
 
-                <div
-                  style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: "8px",
-                  }}
-                >
+                <div>
                   {senders.map(({ email, count }) => (
                     <button
                       onMouseDown={() => handleLongPressStart()}
@@ -250,10 +240,10 @@ function Popup() {
                     </button>
                   ))}
 
-                  <div>
+                  <div className={styles.container}>
                     <h1>Cached Emails</h1>
                     {cachedEmails.map((email) => (
-                      <button key={email.id}>
+                      <button className={styles.emailItem} key={email.id}>
                         <p>{email.from}</p>
                       </button>
                     ))}
@@ -288,17 +278,12 @@ function Popup() {
                 </div>
               </>
             )}
+
             <button onClick={loadMore} disabled={loading || !pageToken}>
               {loading ? "Loading..." : pageToken ? "Load More" : "All Loaded"}
             </button>
           </div>
 
-          <button
-            onClick={handleScanInbox}
-            style={{ padding: 8, width: "100%" }}
-          >
-            Scan Inbox
-          </button>
           <button onClick={handleLogout} style={{ padding: 8, width: "100%" }}>
             Logout
           </button>

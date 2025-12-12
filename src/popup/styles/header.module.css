@@ -1,0 +1,43 @@
+.headerContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px;
+  border-radius: 10px;
+  gap: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+h1.greeting {
+  font-size: 24px;
+  text-align: left;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+}
+
+p.description {
+  font-size: 16px;
+  text-align: left;
+  color: #6b7280;
+}
+
+.scanButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 0 16px;
+  width: 100%;
+  cursor: pointer;
+  background-color: #296cd8;
+  border-radius: 8px;
+  color: white;
+  border: none;
+}
+
+.scanButton:hover {
+  background-color: #dde5f2;
+}
