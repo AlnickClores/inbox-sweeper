@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import { useState, useEffect } from "react";
 import Filter from "./components/Filter";
 import styles from "./styles/emails.module.css";
+import loginStyles from "./styles/login.module.css";
 import Header from "./components/Header";
 
 type Sender = { email: string; count: number };
@@ -289,9 +290,61 @@ function Popup() {
           </button>
         </>
       ) : (
-        <button onClick={handleLogin} style={{ padding: 8, width: "100%" }}>
-          Login with Google
-        </button>
+        <div className={loginStyles.container}>
+          <div className={loginStyles.card}>
+            <div>
+              <h1>Inbox Sweeper</h1>
+              <p className={loginStyles.description}>
+                Clean up your Gmail inbox by identifying top sender and managing
+                your emails efficiently.
+              </p>
+            </div>
+            <button className={loginStyles.loginButton} onClick={handleLogin}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                id="Google-Gmail--Streamline-Svg-Logos"
+                height="24"
+                width="24"
+              >
+                <desc>
+                  Google Gmail Streamline Icon: https://streamlinehq.com
+                </desc>
+                <path
+                  fill="#4285f4"
+                  d="M5.5909 20.814775V11.735225L2.775025 9.159075 0.25 7.72955V19.2125c0 0.886575 0.7183525 1.602275 1.6022725 1.602275H5.5909Z"
+                  stroke-width="0.25"
+                ></path>
+                <path
+                  fill="#34a853"
+                  d="M18.408925 20.814775h3.73865c0.8866 0 1.602275 -0.71835 1.602275 -1.602275V7.72955l-2.86 1.637475 -2.480925 2.3682v9.07955Z"
+                  stroke-width="0.25"
+                ></path>
+                <path
+                  fill="#ea4335"
+                  d="m5.590925 11.735225 -0.38315 -3.5477 0.38315 -3.395475 6.4091 4.8068 6.409075 -4.8068 0.42865 3.21215 -0.42865 3.731025 -6.409075 4.806825 -6.4091 -4.806825Z"
+                  stroke-width="0.25"
+                ></path>
+                <path
+                  fill="#fbbc04"
+                  d="M18.408925 4.79205v6.943175l5.340925 -4.005675v-2.136375c0 -1.981475 -2.261875 -3.111075 -3.84545 -1.922725l-1.495475 1.1216Z"
+                  stroke-width="0.25"
+                ></path>
+                <path
+                  fill="#c5221f"
+                  d="m0.25 7.72955 2.456375 1.842275 2.884525 2.1634V4.79205l-1.49545 -1.1216C2.5092 2.4821 0.25 3.6117 0.25 5.593175v2.136375Z"
+                  stroke-width="0.25"
+                ></path>
+              </svg>
+              <span>Connect with Gmail</span>
+            </button>
+            <p>
+              By connecting, you allow Inbox Sweeper to access your Gmail
+              account to analyze sender frequency.
+            </p>
+          </div>
+        </div>
       )}
     </div>
   );
