@@ -1,32 +1,25 @@
 import { createRoot } from "react-dom/client";
 import { useState, useEffect } from "react";
-import Filter from "./components/Filter";
-import styles from "./styles/emails.module.css";
 import loginStyles from "./styles/login.module.css";
 import Header from "./components/Header";
+import EmailList from "./components/EmailList";
+import type { CachedMessage } from "./types/type";
 
 type Sender = { email: string; count: number };
 
-interface CachedMessage {
-  id: string;
-  from: string;
-  date: number;
-  unread: boolean;
-}
-
 function Popup() {
   const [name, setName] = useState<string | null>(null);
-  const [senders, setSenders] = useState<{ email: string; count: number }[]>(
-    []
-  );
-  const [pageToken, setPageToken] = useState<string | undefined>(undefined);
-  const [loading, setLoading] = useState(false);
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  // const [senders, setSenders] = useState<{ email: string; count: number }[]>(
+  //   []
+  // );
+  // const [pageToken, setPageToken] = useState<string | undefined>(undefined);
+  // const [loading, setLoading] = useState(false);
+  // const [selectionMode, setSelectionMode] = useState(false);
+  // const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [cachedEmails, setCachedEmails] = useState<CachedMessage[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
-  const longPressThreshold: number = 250;
-  let longPressTriggered = false;
+  // const longPressThreshold: number = 250;
+  // let longPressTriggered = false;
 
   useEffect(() => {
     console.log("Loading cached emails...");
@@ -55,33 +48,33 @@ function Popup() {
     });
   };
 
-  const handleLogout = () => {
-    chrome.runtime.sendMessage({ type: "LOGOUT_GOOGLE" }, (res) => {
-      if (!res?.success) return alert("Logout failed");
+  // const handleLogout = () => {
+  //   chrome.runtime.sendMessage({ type: "LOGOUT_GOOGLE" }, (res) => {
+  //     if (!res?.success) return alert("Logout failed");
 
-      setName(null);
-    });
-  };
+  //     setName(null);
+  //   });
+  // };
 
-  const loadMore = () => {
-    if (loading) return;
-    setLoading(true);
+  // const loadMore = () => {
+  //   if (loading) return;
+  //   setLoading(true);
 
-    chrome.runtime.sendMessage(
-      { type: "SCAN_INBOX_CHUNK", pageToken, chunkSize: 10 },
-      (res) => {
-        setLoading(false);
-        if (!res?.success) return alert("Failed to load inbox");
+  //   chrome.runtime.sendMessage(
+  //     { type: "SCAN_INBOX_CHUNK", pageToken, chunkSize: 10 },
+  //     (res) => {
+  //       setLoading(false);
+  //       if (!res?.success) return alert("Failed to load inbox");
 
-        const arr = Object.entries(res.sendersMap as Record<string, number>)
-          .map(([email, count]) => ({ email, count }))
-          .sort((a, b) => b.count - a.count);
+  //       const arr = Object.entries(res.sendersMap as Record<string, number>)
+  //         .map(([email, count]) => ({ email, count }))
+  //         .sort((a, b) => b.count - a.count);
 
-        setSenders((prev) => [...prev, ...arr]);
-        setPageToken(res.nextPageToken);
-      }
-    );
-  };
+  //       setSenders((prev) => [...prev, ...arr]);
+  //       setPageToken(res.nextPageToken);
+  //     }
+  //   );
+  // };
 
   const fetchUserInfo = async (token: string) => {
     try {
@@ -116,43 +109,45 @@ function Popup() {
           .slice(0, 10);
 
         setRefreshKey((prev) => prev + 1);
-        setSenders(arr);
+
+        return arr;
+        // setSenders(arr);
       });
     });
   };
 
-  const handleLongPressStart = () => {
-    longPressTriggered = false;
+  // const handleLongPressStart = () => {
+  //   longPressTriggered = false;
 
-    setTimeout(() => {
-      longPressTriggered = true;
-      setSelectionMode(true);
-    }, longPressThreshold);
-  };
+  //   setTimeout(() => {
+  //     longPressTriggered = true;
+  //     setSelectionMode(true);
+  //   }, longPressThreshold);
+  // };
 
-  const handleLongPressEnd = (email: string) => {
-    if (longPressTriggered) {
-      selectEmail(email);
-    }
-  };
+  // const handleLongPressEnd = (email: string) => {
+  //   if (longPressTriggered) {
+  //     selectEmail(email);
+  //   }
+  // };
 
-  const handleClick = (email: string) => {
-    if (longPressTriggered) return;
+  // const handleClick = (email: string) => {
+  //   if (longPressTriggered) return;
 
-    if (selectionMode) {
-      selectEmail(email);
-    }
-  };
+  //   if (selectionMode) {
+  //     selectEmail(email);
+  //   }
+  // };
 
-  const selectEmail = (email: string) => {
-    setSelectedItems((prev) =>
-      prev.includes(email) ? prev.filter((e) => e !== email) : [...prev, email]
-    );
-  };
+  // const selectEmail = (email: string) => {
+  //   setSelectedItems((prev) =>
+  //     prev.includes(email) ? prev.filter((e) => e !== email) : [...prev, email]
+  //   );
+  // };
 
-  useEffect(() => {
-    console.log("Selected items:", selectedItems);
-  }, [selectedItems]);
+  // useEffect(() => {
+  //   console.log("Selected items:", selectedItems);
+  // }, [selectedItems]);
 
   useEffect(() => {
     chrome.storage.local.get(["INBOX_TOKEN"], async (res) => {
@@ -178,116 +173,25 @@ function Popup() {
   }, []);
 
   return (
-    <div style={{ padding: 16 }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "20px",
+        padding: "16px 20px",
+      }}
+    >
       {name ? (
         <>
           <Header name={name} handleScanInbox={handleScanInbox} />
 
-          <div style={{ marginTop: "16px" }}>
-            {cachedEmails.length > 0 && (
-              <>
-                <h3
-                  style={{
-                    fontSize: "1.1rem",
-                    fontWeight: 600,
-                    marginBottom: "8px",
-                  }}
-                >
-                  Top Senders
-                </h3>
+          <div>
+            <EmailList cachedEmails={cachedEmails} />
 
-                <Filter />
-
-                <div>
-                  {senders.map(({ email, count }) => (
-                    <button
-                      onMouseDown={() => handleLongPressStart()}
-                      onMouseUp={() => handleLongPressEnd(email)}
-                      onClick={() => handleClick(email)}
-                      key={email}
-                      style={{
-                        padding: "6px 12px",
-                        borderRadius: "20px",
-                        border: "1px solid #d0d0d0",
-                        background: "#f5f5f5",
-                        fontSize: "0.9rem",
-                        cursor: "pointer",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
-                        transition: "all 0.2s ease",
-                      }}
-                      onMouseEnter={(e) => {
-                        const btn = e.currentTarget as HTMLButtonElement;
-                        btn.style.background = "#e9e9e9";
-                        btn.style.borderColor = "#c4c4c4";
-                      }}
-                      onMouseLeave={(e) => {
-                        const btn = e.currentTarget as HTMLButtonElement;
-                        btn.style.background = "#f5f5f5";
-                        btn.style.borderColor = "#d0d0d0";
-                      }}
-                    >
-                      <span style={{ fontWeight: 500 }}>{email}</span>
-                      <span
-                        style={{
-                          marginLeft: "6px",
-                          color: "#666",
-                          fontSize: "0.8rem",
-                        }}
-                      >
-                        ({count})
-                      </span>
-                    </button>
-                  ))}
-
-                  <div className={styles.container}>
-                    <h1>Cached Emails</h1>
-                    {cachedEmails.map((email) => (
-                      <button className={styles.emailItem} key={email.id}>
-                        <p>{email.from}</p>
-                      </button>
-                    ))}
-                  </div>
-                  {selectionMode && (
-                    <button
-                      onClick={() => {
-                        setSelectedItems([]);
-                        setSelectionMode(false);
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  )}
-                  {selectionMode && selectedItems.length > 0 && (
-                    <button
-                      onClick={() => {
-                        chrome.runtime.sendMessage(
-                          { type: "TRASH_EMAILS", senders: selectedItems },
-                          (res) => {
-                            if (!res?.success)
-                              return alert("Failed to delete emails");
-                            console.log(res);
-                            alert(`Emails successfully deleted: ${res.count}`);
-                          }
-                        );
-                      }}
-                    >
-                      Delete Selected
-                    </button>
-                  )}
-                </div>
-              </>
-            )}
-
-            <button onClick={loadMore} disabled={loading || !pageToken}>
+            {/* <button onClick={loadMore} disabled={loading || !pageToken}>
               {loading ? "Loading..." : pageToken ? "Load More" : "All Loaded"}
-            </button>
+            </button> */}
           </div>
-
-          <button onClick={handleLogout} style={{ padding: 8, width: "100%" }}>
-            Logout
-          </button>
         </>
       ) : (
         <div className={loginStyles.container}>
