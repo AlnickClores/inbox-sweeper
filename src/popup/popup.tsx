@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { useState, useEffect } from "react";
 import loginStyles from "./styles/login.module.css";
+import Navbar from "./components/Navbar";
 import Header from "./components/Header";
 import EmailList from "./components/EmailList";
 import type { CachedMessage } from "./types/type";
@@ -48,13 +49,13 @@ function Popup() {
     });
   };
 
-  // const handleLogout = () => {
-  //   chrome.runtime.sendMessage({ type: "LOGOUT_GOOGLE" }, (res) => {
-  //     if (!res?.success) return alert("Logout failed");
+  const handleLogout = () => {
+    chrome.runtime.sendMessage({ type: "LOGOUT_GOOGLE" }, (res) => {
+      if (!res?.success) return alert("Logout failed");
 
-  //     setName(null);
-  //   });
-  // };
+      setName(null);
+    });
+  };
 
   // const loadMore = () => {
   //   if (loading) return;
@@ -183,6 +184,7 @@ function Popup() {
     >
       {name ? (
         <>
+          <Navbar handleLogout={handleLogout} />
           <Header name={name} handleScanInbox={handleScanInbox} />
 
           <div>
