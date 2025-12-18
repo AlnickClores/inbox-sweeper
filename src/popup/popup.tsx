@@ -101,7 +101,7 @@ function Popup() {
 
         const sendersMap: Record<string, number> = {};
         emails.forEach((msg) => {
-          sendersMap[msg.from] = (sendersMap[msg.from] || 0) + 1;
+          sendersMap[msg.email] = (sendersMap[msg.email] || 0) + 1;
         });
 
         const arr: Sender[] = Object.entries(sendersMap)
@@ -186,7 +186,6 @@ function Popup() {
         <>
           <Navbar handleLogout={handleLogout} />
           <Header name={name} handleScanInbox={handleScanInbox} />
-
           <div>
             <EmailList cachedEmails={cachedEmails} />
 

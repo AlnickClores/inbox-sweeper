@@ -14,7 +14,8 @@ const EmailList = ({ cachedEmails }: EmailListProps) => {
       <div className={styles.emailList}>
         {cachedEmails.map((email) => (
           <button key={email.id} className={styles.emailItem}>
-            <p>{email.from}</p>
+            <p>{email.email}</p>
+            <p>{email.count}</p>
           </button>
         ))}
       </div>

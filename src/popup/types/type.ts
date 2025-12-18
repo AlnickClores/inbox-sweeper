@@ -1,6 +1,7 @@
 export interface CachedMessage {
   id: string;
-  from: string;
+  email: string;
+  count: number;
   date: number;
   unread: boolean;
 }

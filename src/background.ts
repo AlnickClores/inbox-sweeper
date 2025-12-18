@@ -234,11 +234,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
           const scannedEmails = await fetchAllMessages(token);
 
-          chrome.storage.local.set({
-            INBOX_DATA: scannedEmails,
-            LAST_SCAN: Date.now(),
-          });
-
           const senderCount: Record<string, number> = {};
           scannedEmails.forEach((email) => {
             senderCount[email.from] = (senderCount[email.from] || 0) + 1;
@@ -248,20 +243,24 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             `Inbox scan complete: ${scannedEmails.length} emails scanned.`
           );
 
-          const sorted: { email: string; count: number }[] = Object.entries(
-            senderCount
-          )
-            .map(([email, count]) => ({
-              email,
-              count,
-            }))
-            .sort((a, b) => b.count - a.count);
+          const senderFrequency: { email: string; count: number }[] =
+            Object.entries(senderCount)
+              .map(([email, count]) => ({
+                email,
+                count,
+              }))
+              .sort((a, b) => b.count - a.count);
 
-          console.log("Top senders:", sorted.slice(0, 10));
+          chrome.storage.local.set({
+            INBOX_DATA: senderFrequency,
+            LAST_SCAN: Date.now(),
+          });
+
+          console.log("Top senders:", senderFrequency.slice(0, 10));
           sendResponse({
             success: true,
             count: scannedEmails.length,
-            senderCount: sorted,
+            senderCount: senderFrequency,
           });
         } catch (error) {
           console.error("Error scanning inbox:", error);
