@@ -182,8 +182,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       chrome.storage.local.set({ INBOX_TOKEN: token }, () => {
         sendResponse({ success: true, token });
       });
-
-      sendResponse({ success: true, token });
     });
 
     return true;
@@ -191,26 +189,31 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   if (message.type === "LOGOUT_GOOGLE") {
     console.log("LOGOUT_GOOGLE message received");
-    chrome.storage.local.get("INBOX_TOKEN", async (result) => {
-      const token = result.INBOX_TOKEN;
+    chrome.storage.local.get(
+      "INBOX_TOKEN",
+      async (result: { INBOX_TOKEN?: string }) => {
+        const token = result.INBOX_TOKEN;
 
-      if (!token) {
-        sendResponse({ success: true });
-        return;
-      }
-
-      try {
-        await fetch(
-          `https://accounts.google.com/o/oauth2/revoke?token=${token}`
-        );
-
-        chrome.storage.local.remove("INBOX_TOKEN", () => {
+        if (!token) {
           sendResponse({ success: true });
-        });
-      } catch (error) {
-        sendResponse({ success: false, error });
+          return;
+        }
+
+        try {
+          chrome.identity.removeCachedAuthToken({ token }, async () => {
+            await fetch(
+              `https://accounts.google.com/o/oauth2/revoke?token=${token}`
+            );
+          });
+
+          chrome.storage.local.remove("INBOX_TOKEN", () => {
+            sendResponse({ success: true });
+          });
+        } catch (error) {
+          sendResponse({ success: false, error });
+        }
       }
-    });
+    );
 
     return true;
   }
