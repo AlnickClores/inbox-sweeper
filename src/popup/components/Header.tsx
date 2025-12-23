@@ -10,7 +10,7 @@ const Header = ({
   return (
     <div className={styles.headerContainer}>
       <div>
-        <h1>
+        <h1 className={styles.greeting}>
           {new Date().getHours() < 12
             ? "Good morning"
             : new Date().getHours() < 18
