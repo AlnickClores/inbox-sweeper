@@ -37,7 +37,7 @@ const EmailList = ({ cachedEmails }: EmailListProps) => {
                 </svg>
               </span>
               <div className={styles.emailDetails}>
-                <p className={styles.emailName}>Name</p>
+                <p className={styles.emailName}>{email.name}</p>
                 <p className={styles.smallText}>{email.email}</p>
               </div>
             </div>

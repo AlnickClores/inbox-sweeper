@@ -17,11 +17,17 @@ function extractEmail(fromHeader: string): string {
   return match ? match[1] : fromHeader.trim();
 }
 
+function extractSenderName(fromHeader: string): string {
+  const match = fromHeader.match(/^([^<]+)/);
+  return match ? match[1].trim() : "Unknown";
+}
+
 interface CachedMessage {
   id: string;
   from: string;
-  date: string;
-  unread: boolean;
+  senderName: string;
+  date?: string;
+  unread?: boolean;
 }
 
 async function fetchMessageChunk(
@@ -90,10 +96,12 @@ async function fetchMessageMetadata(token: string, messageId: string) {
   if (!header?.value) return null;
 
   const cleanEmail = extractEmail(header.value);
+  const senderName = extractSenderName(header.value);
 
   return {
     id: messageId,
     from: cleanEmail,
+    senderName: senderName,
   };
 }
 
@@ -234,29 +242,40 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
           const scannedEmails = await fetchAllMessages(token);
 
-          const senderCount: Record<string, number> = {};
+          const senderCount: Record<string, { count: number; name: string }> =
+            {};
           scannedEmails.forEach((email) => {
-            senderCount[email.from] = (senderCount[email.from] || 0) + 1;
+            if (!senderCount[email.from]) {
+              senderCount[email.from] = { count: 0, name: email.senderName };
+            }
+            senderCount[email.from].count += 1;
           });
 
           console.log(
             `Inbox scan complete: ${scannedEmails.length} emails scanned.`
           );
 
-          const senderFrequency: { email: string; count: number }[] =
-            Object.entries(senderCount)
-              .map(([email, count]) => ({
-                email,
-                count,
-              }))
-              .sort((a, b) => b.count - a.count);
+          const senderFrequency: {
+            email: string;
+            count: number;
+            name: string;
+          }[] = Object.entries(senderCount)
+            .map(([email, { count, name }]) => ({
+              email,
+              count,
+              name,
+            }))
+            .sort((a, b) => b.count - a.count);
 
           chrome.storage.local.set({
             INBOX_DATA: senderFrequency,
             LAST_SCAN: Date.now(),
           });
 
-          console.log("Top senders:", senderFrequency.slice(0, 10));
+          console.log(
+            "Top senders:",
+            JSON.stringify(senderFrequency.slice(0, 10), null, 2)
+          );
           sendResponse({
             success: true,
             count: scannedEmails.length,
