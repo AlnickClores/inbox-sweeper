@@ -6,3 +6,5 @@ export interface CachedMessage {
   date: number;
   unread: boolean;
 }
+
+export type Order = "desc" | "asc";

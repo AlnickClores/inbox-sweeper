@@ -1,10 +1,11 @@
 import { createRoot } from "react-dom/client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import loginStyles from "./styles/login.module.css";
 import Navbar from "./components/Navbar";
 import Header from "./components/Header";
 import EmailList from "./components/EmailList";
 import type { CachedMessage } from "./types/type";
+import type { Order } from "./types/type";
 
 type Sender = { email: string; count: number };
 
@@ -13,8 +14,9 @@ function Popup() {
   // const [selectionMode, setSelectionMode] = useState(false);
   // const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [cachedEmails, setCachedEmails] = useState<CachedMessage[]>([]);
-  const [displayedEmails, setDisplayedEmails] = useState<CachedMessage[]>([]);
+  const [visibleCount, setVisibleCount] = useState(10);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [order, setOrder] = useState<Order>("desc");
   // const longPressThreshold: number = 250;
   // let longPressTriggered = false;
 
@@ -29,7 +31,7 @@ function Popup() {
       if (emails) {
         setCachedEmails(emails);
         const top10 = emails.slice(0, 10);
-        setDisplayedEmails(top10);
+        console.log("Top 10 senders:", top10);
       }
     });
   }, [refreshKey]);
@@ -53,11 +55,25 @@ function Popup() {
     });
   };
 
+  const sortedEmails = useMemo(() => {
+    return [
+      ...cachedEmails.sort((a, b) =>
+        order === "desc" ? b.count - a.count : a.count - b.count
+      ),
+    ];
+  }, [cachedEmails, order]);
+
+  const visibleEmails = useMemo(() => {
+    return sortedEmails.slice(0, visibleCount);
+  }, [sortedEmails, visibleCount]);
+
   const loadMore = () => {
     console.log("Loading more emails...");
-    const currentCount = displayedEmails.length;
-    const moreEmails = cachedEmails.slice(currentCount, currentCount + 10);
-    setDisplayedEmails((prev) => [...prev, ...moreEmails]);
+    setVisibleCount((prev) => prev + 10);
+  };
+
+  const onOrderChange = (value: Order) => {
+    setOrder(value);
   };
 
   const fetchUserInfo = async (token: string) => {
@@ -155,6 +171,10 @@ function Popup() {
     });
   }, []);
 
+  useEffect(() => {
+    setVisibleCount(10);
+  }, [order]);
+
   return (
     <div
       style={{
@@ -169,7 +189,12 @@ function Popup() {
           <Navbar handleLogout={handleLogout} />
           <Header name={name} handleScanInbox={handleScanInbox} />
           <div>
-            <EmailList cachedEmails={displayedEmails} loadMore={loadMore} />
+            <EmailList
+              cachedEmails={visibleEmails}
+              loadMore={loadMore}
+              order={order}
+              onOrderChange={onOrderChange}
+            />
           </div>
         </>
       ) : (

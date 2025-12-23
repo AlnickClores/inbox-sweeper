@@ -6,12 +6,19 @@ import styles from "../styles/emails.module.css";
 interface EmailListProps {
   cachedEmails: CachedMessage[];
   loadMore: () => void;
+  order: "asc" | "desc";
+  onOrderChange: (value: "asc" | "desc") => void;
 }
 
-const EmailList = ({ cachedEmails, loadMore }: EmailListProps) => {
+const EmailList = ({
+  cachedEmails,
+  loadMore,
+  order,
+  onOrderChange,
+}: EmailListProps) => {
   return (
     <div>
-      <Filter />
+      <Filter order={order} onOrderChange={onOrderChange} />
 
       <div className={styles.emailList}>
         {cachedEmails.map((email) => (
