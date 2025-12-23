@@ -10,14 +10,10 @@ type Sender = { email: string; count: number };
 
 function Popup() {
   const [name, setName] = useState<string | null>(null);
-  // const [senders, setSenders] = useState<{ email: string; count: number }[]>(
-  //   []
-  // );
-  // const [pageToken, setPageToken] = useState<string | undefined>(undefined);
-  // const [loading, setLoading] = useState(false);
   // const [selectionMode, setSelectionMode] = useState(false);
   // const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [cachedEmails, setCachedEmails] = useState<CachedMessage[]>([]);
+  const [displayedEmails, setDisplayedEmails] = useState<CachedMessage[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
   // const longPressThreshold: number = 250;
   // let longPressTriggered = false;
@@ -31,9 +27,9 @@ function Popup() {
       console.log("Cached emails loaded:", emails);
 
       if (emails) {
-        const sortedEmailsDescending = emails.sort((a, b) => b.date - a.date);
-        const top10 = sortedEmailsDescending.slice(0, 10);
-        setCachedEmails(top10);
+        setCachedEmails(emails);
+        const top10 = emails.slice(0, 10);
+        setDisplayedEmails(top10);
       }
     });
   }, [refreshKey]);
@@ -57,25 +53,12 @@ function Popup() {
     });
   };
 
-  // const loadMore = () => {
-  //   if (loading) return;
-  //   setLoading(true);
-
-  //   chrome.runtime.sendMessage(
-  //     { type: "SCAN_INBOX_CHUNK", pageToken, chunkSize: 10 },
-  //     (res) => {
-  //       setLoading(false);
-  //       if (!res?.success) return alert("Failed to load inbox");
-
-  //       const arr = Object.entries(res.sendersMap as Record<string, number>)
-  //         .map(([email, count]) => ({ email, count }))
-  //         .sort((a, b) => b.count - a.count);
-
-  //       setSenders((prev) => [...prev, ...arr]);
-  //       setPageToken(res.nextPageToken);
-  //     }
-  //   );
-  // };
+  const loadMore = () => {
+    console.log("Loading more emails...");
+    const currentCount = displayedEmails.length;
+    const moreEmails = cachedEmails.slice(currentCount, currentCount + 10);
+    setDisplayedEmails((prev) => [...prev, ...moreEmails]);
+  };
 
   const fetchUserInfo = async (token: string) => {
     try {
@@ -112,7 +95,6 @@ function Popup() {
         setRefreshKey((prev) => prev + 1);
 
         return arr;
-        // setSenders(arr);
       });
     });
   };
@@ -187,11 +169,7 @@ function Popup() {
           <Navbar handleLogout={handleLogout} />
           <Header name={name} handleScanInbox={handleScanInbox} />
           <div>
-            <EmailList cachedEmails={cachedEmails} />
-
-            {/* <button onClick={loadMore} disabled={loading || !pageToken}>
-              {loading ? "Loading..." : pageToken ? "Load More" : "All Loaded"}
-            </button> */}
+            <EmailList cachedEmails={displayedEmails} loadMore={loadMore} />
           </div>
         </>
       ) : (

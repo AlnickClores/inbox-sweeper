@@ -1,12 +1,14 @@
 import Filter from "./Filter";
+import SeeMoreBtn from "./SeeMoreBtn";
 import type { CachedMessage } from "../types/type";
 import styles from "../styles/emails.module.css";
 
 interface EmailListProps {
   cachedEmails: CachedMessage[];
+  loadMore: () => void;
 }
 
-const EmailList = ({ cachedEmails }: EmailListProps) => {
+const EmailList = ({ cachedEmails, loadMore }: EmailListProps) => {
   return (
     <div>
       <Filter />
@@ -66,6 +68,7 @@ const EmailList = ({ cachedEmails }: EmailListProps) => {
           </button>
         ))}
       </div>
+      <SeeMoreBtn loadMore={loadMore} />
     </div>
   );
 };
