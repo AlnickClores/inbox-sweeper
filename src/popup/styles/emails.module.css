@@ -28,13 +28,15 @@
   gap: 12px;
 }
 
-.emailIcon {
+.checkbox {
   display: flex;
-  justify-content: center;
   align-items: center;
-  padding: 12px;
-  border-radius: 12px;
-  background-color: #dde5f2;
+  justify-content: center;
+  padding: 2px;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #0000004d;
+  border-radius: 4px;
 }
 
 .emailDetails {

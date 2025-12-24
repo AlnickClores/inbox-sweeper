@@ -8,33 +8,15 @@ import type { CachedMessage } from "./types/type";
 import type { Order } from "./types/type";
 
 type Sender = { email: string; count: number };
+type SelectedSender = { email: string; messageIds: string[] };
 
 function Popup() {
   const [name, setName] = useState<string | null>(null);
-  // const [selectionMode, setSelectionMode] = useState(false);
-  // const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [cachedEmails, setCachedEmails] = useState<CachedMessage[]>([]);
   const [visibleCount, setVisibleCount] = useState(10);
   const [refreshKey, setRefreshKey] = useState(0);
   const [order, setOrder] = useState<Order>("desc");
-  // const longPressThreshold: number = 250;
-  // let longPressTriggered = false;
-
-  useEffect(() => {
-    console.log("Loading cached emails...");
-    chrome.storage.local.get("INBOX_DATA", (res) => {
-      if (!res.INBOX_DATA) return;
-
-      const emails = res.INBOX_DATA as CachedMessage[];
-      console.log("Cached emails loaded:", emails);
-
-      if (emails) {
-        setCachedEmails(emails);
-        const top10 = emails.slice(0, 10);
-        console.log("Top 10 senders:", top10);
-      }
-    });
-  }, [refreshKey]);
+  const [selectedEmails, setSelectedEmails] = useState<SelectedSender[]>([]);
 
   const handleLogin = () => {
     chrome.runtime.sendMessage({ type: "LOGIN_GOOGLE" }, async (res) => {
@@ -53,27 +35,6 @@ function Popup() {
 
       setName(null);
     });
-  };
-
-  const sortedEmails = useMemo(() => {
-    return [
-      ...cachedEmails.sort((a, b) =>
-        order === "desc" ? b.count - a.count : a.count - b.count
-      ),
-    ];
-  }, [cachedEmails, order]);
-
-  const visibleEmails = useMemo(() => {
-    return sortedEmails.slice(0, visibleCount);
-  }, [sortedEmails, visibleCount]);
-
-  const loadMore = () => {
-    console.log("Loading more emails...");
-    setVisibleCount((prev) => prev + 10);
-  };
-
-  const onOrderChange = (value: Order) => {
-    setOrder(value);
   };
 
   const fetchUserInfo = async (token: string) => {
@@ -115,38 +76,44 @@ function Popup() {
     });
   };
 
-  // const handleLongPressStart = () => {
-  //   longPressTriggered = false;
+  const loadMore = () => {
+    console.log("Loading more emails...");
+    setVisibleCount((prev) => prev + 10);
+  };
 
-  //   setTimeout(() => {
-  //     longPressTriggered = true;
-  //     setSelectionMode(true);
-  //   }, longPressThreshold);
-  // };
+  const onOrderChange = (value: Order) => {
+    setOrder(value);
+  };
 
-  // const handleLongPressEnd = (email: string) => {
-  //   if (longPressTriggered) {
-  //     selectEmail(email);
-  //   }
-  // };
+  const sortedEmails = useMemo(() => {
+    return [
+      ...cachedEmails.sort((a, b) =>
+        order === "desc" ? b.count - a.count : a.count - b.count
+      ),
+    ];
+  }, [cachedEmails, order]);
 
-  // const handleClick = (email: string) => {
-  //   if (longPressTriggered) return;
+  const visibleEmails = useMemo(() => {
+    return sortedEmails.slice(0, visibleCount);
+  }, [sortedEmails, visibleCount]);
 
-  //   if (selectionMode) {
-  //     selectEmail(email);
-  //   }
-  // };
+  const handleSelectEmail = (email: string, messageIds: string[]) => {
+    console.log("Email address:", email);
+    console.log("Message IDs:", messageIds);
+    setSelectedEmails((prev) => {
+      const exists = prev.find((item) => item.email === email);
 
-  // const selectEmail = (email: string) => {
-  //   setSelectedItems((prev) =>
-  //     prev.includes(email) ? prev.filter((e) => e !== email) : [...prev, email]
-  //   );
-  // };
+      if (exists) {
+        return prev.filter((item) => item.email !== email);
+      }
 
-  // useEffect(() => {
-  //   console.log("Selected items:", selectedItems);
-  // }, [selectedItems]);
+      return [...prev, { email, messageIds }];
+    });
+  };
+
+  useEffect(() => {
+    console.log("Selected Emails:", selectedEmails);
+  }, [selectedEmails]);
 
   useEffect(() => {
     chrome.storage.local.get(["INBOX_TOKEN"], async (res) => {
@@ -172,6 +139,22 @@ function Popup() {
   }, []);
 
   useEffect(() => {
+    console.log("Loading cached emails...");
+    chrome.storage.local.get("INBOX_DATA", (res) => {
+      if (!res.INBOX_DATA) return;
+
+      const emails = res.INBOX_DATA as CachedMessage[];
+      console.log("Cached emails loaded:", emails);
+
+      if (emails) {
+        setCachedEmails(emails);
+        const top10 = emails.slice(0, 10);
+        console.log("Top 10 senders:", top10);
+      }
+    });
+  }, [refreshKey]);
+
+  useEffect(() => {
     setVisibleCount(10);
   }, [order]);
 
@@ -194,6 +177,8 @@ function Popup() {
               loadMore={loadMore}
               order={order}
               onOrderChange={onOrderChange}
+              handleSelectEmail={handleSelectEmail}
+              selectedEmails={selectedEmails.map((item) => item.email)}
             />
           </div>
         </>
