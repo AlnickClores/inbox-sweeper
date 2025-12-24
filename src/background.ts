@@ -242,13 +242,20 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
           const scannedEmails = await fetchAllMessages(token);
 
-          const senderCount: Record<string, { count: number; name: string }> =
-            {};
+          const senderCount: Record<
+            string,
+            { count: number; name: string; messageIds: string[] }
+          > = {};
           scannedEmails.forEach((email) => {
             if (!senderCount[email.from]) {
-              senderCount[email.from] = { count: 0, name: email.senderName };
+              senderCount[email.from] = {
+                count: 0,
+                name: email.senderName,
+                messageIds: [],
+              };
             }
             senderCount[email.from].count += 1;
+            senderCount[email.from].messageIds.push(email.id);
           });
 
           console.log(
@@ -260,10 +267,11 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             count: number;
             name: string;
           }[] = Object.entries(senderCount)
-            .map(([email, { count, name }]) => ({
+            .map(([email, data]) => ({
               email,
-              count,
-              name,
+              count: data.count,
+              name: data.name,
+              messageIds: data.messageIds,
             }))
             .sort((a, b) => b.count - a.count);
 
