@@ -4,6 +4,7 @@ import loginStyles from "./styles/login.module.css";
 import Navbar from "./components/Navbar";
 import Header from "./components/Header";
 import EmailList from "./components/EmailList";
+import ActionBar from "./components/ActionBar";
 import type { CachedMessage } from "./types/type";
 import type { Order } from "./types/type";
 
@@ -181,6 +182,7 @@ function Popup() {
               selectedEmails={selectedEmails.map((item) => item.email)}
             />
           </div>
+          {selectedEmails.length > 0 && <ActionBar />}
         </>
       ) : (
         <div className={loginStyles.container}>
