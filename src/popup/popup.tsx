@@ -18,6 +18,7 @@ function Popup() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [order, setOrder] = useState<Order>("desc");
   const [selectedEmails, setSelectedEmails] = useState<SelectedSender[]>([]);
+  const [isScanning, setIsScanning] = useState<boolean>(false);
 
   const handleLogin = () => {
     chrome.runtime.sendMessage({ type: "LOGIN_GOOGLE" }, async (res) => {
@@ -53,12 +54,19 @@ function Popup() {
   };
 
   const handleScanInbox = () => {
+    setIsScanning(true);
     chrome.runtime.sendMessage({ type: "SCAN_INBOX" }, (res) => {
-      if (!res?.success) return alert("Failed to scan inbox");
+      if (!res?.success) {
+        setIsScanning(false);
+        return alert("Failed to scan inbox");
+      }
 
       chrome.storage.local.get("INBOX_DATA", (data) => {
         const emails = data.INBOX_DATA as CachedMessage[];
-        if (!emails || emails.length === 0) return;
+        if (!emails || emails.length === 0) {
+          setIsScanning(false);
+          return;
+        }
 
         const sendersMap: Record<string, number> = {};
         emails.forEach((msg) => {
@@ -71,6 +79,7 @@ function Popup() {
           .slice(0, 10);
 
         setRefreshKey((prev) => prev + 1);
+        setIsScanning(false);
 
         return arr;
       });
@@ -182,10 +191,15 @@ function Popup() {
         padding: "16px 20px",
       }}
     >
+      {/* <button onClick={() => setIsScanning(!isScanning)}>Trigger Scan</button> */}
       {name ? (
         <>
           <Navbar handleLogout={handleLogout} />
-          <Header name={name} handleScanInbox={handleScanInbox} />
+          <Header
+            name={name}
+            handleScanInbox={handleScanInbox}
+            isScanning={isScanning}
+          />
           <div>
             <EmailList
               cachedEmails={visibleEmails}
@@ -194,6 +208,7 @@ function Popup() {
               onOrderChange={onOrderChange}
               handleSelectEmail={handleSelectEmail}
               selectedEmails={selectedEmails.map((item) => item.email)}
+              isScanning={isScanning}
             />
           </div>
           {selectedEmails.length > 0 && (

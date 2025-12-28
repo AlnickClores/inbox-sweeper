@@ -3,9 +3,11 @@ import styles from "../styles/header.module.css";
 const Header = ({
   name,
   handleScanInbox,
+  isScanning,
 }: {
   name: string;
   handleScanInbox: () => void;
+  isScanning: boolean;
 }) => {
   return (
     <div className={styles.headerContainer}>
@@ -22,8 +24,13 @@ const Header = ({
           Click scan to analyze your inbox and find your top email senders.
         </p>
       </div>
-      <button className={styles.scanButton} onClick={handleScanInbox}>
+      <button
+        className={`${styles.scanButton} ${isScanning ? styles.scanning : ""}`}
+        onClick={handleScanInbox}
+        disabled={isScanning}
+      >
         <svg
+          className={isScanning ? styles.spin : ""}
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="none"
@@ -40,7 +47,7 @@ const Header = ({
           <path d="M21 17v2a2 2 0 0 1 -2 2h-2" stroke-width="2"></path>
           <path d="M7 21H5a2 2 0 0 1 -2 -2v-2" stroke-width="2"></path>
         </svg>{" "}
-        Scan Inbox
+        {isScanning ? "Scanning..." : "Scan Inbox"}
       </button>
     </div>
   );
