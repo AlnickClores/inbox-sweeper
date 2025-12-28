@@ -1,0 +1,74 @@
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.skeletonRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+}
+
+.pulse {
+  background-color: #e5e7eb;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lineSmall {
+  height: 14px;
+  width: 33%;
+  border-radius: 6px;
+}
+
+.lineMedium {
+  height: 12px;
+  width: 50%;
+  border-radius: 6px;
+}
+
+.count {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.countLarge {
+  width: 48px;
+  height: 20px;
+  border-radius: 6px;
+}
+
+.countSmall {
+  width: 64px;
+  height: 12px;
+  border-radius: 6px;
+}
+
+.list {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
