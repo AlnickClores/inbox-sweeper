@@ -38,8 +38,8 @@ const Header = ({
           stroke-linecap="round"
           stroke-linejoin="round"
           id="Scan--Streamline-Lucide"
-          height="20"
-          width="20"
+          height="16"
+          width="16"
         >
           <desc>Scan Streamline Icon: https://streamlinehq.com</desc>
           <path d="M3 7V5a2 2 0 0 1 2 -2h2" stroke-width="2"></path>
