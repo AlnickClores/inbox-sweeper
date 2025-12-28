@@ -112,6 +112,20 @@ function Popup() {
     });
   };
 
+  const handleTrashEmails = () => {
+    const messageIdsToTrash = selectedEmails.flatMap((item) => item.messageIds);
+
+    console.log("Trashing emails with IDs:", messageIdsToTrash);
+
+    chrome.runtime.sendMessage({
+      type: "TRASH_EMAILS",
+      payload: messageIdsToTrash,
+    });
+
+    setRefreshKey((prev) => prev + 1);
+    setSelectedEmails([]);
+  };
+
   useEffect(() => {
     console.log("Selected Emails:", selectedEmails);
   }, [selectedEmails]);
@@ -182,7 +196,9 @@ function Popup() {
               selectedEmails={selectedEmails.map((item) => item.email)}
             />
           </div>
-          {selectedEmails.length > 0 && <ActionBar />}
+          {selectedEmails.length > 0 && (
+            <ActionBar handleTrashEmails={handleTrashEmails} />
+          )}
         </>
       ) : (
         <div className={loginStyles.container}>

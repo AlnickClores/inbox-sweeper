@@ -1,9 +1,13 @@
 import styles from "../styles/actionbar.module.css";
 
-const ActionBar = () => {
+interface ActionBarProps {
+  handleTrashEmails: () => void;
+}
+
+const ActionBar = ({ handleTrashEmails }: ActionBarProps) => {
   return (
     <div className={styles.container}>
-      <button className={styles.actionButton}>
+      <button onClick={handleTrashEmails} className={styles.actionButton}>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
