@@ -23,7 +23,7 @@ const Navbar = ({ handleLogout }: { handleLogout: () => void }) => {
             ></path>
           </svg>
         </span>
-        <h1 className={styles.title}>Inbox Sweeper</h1>
+        <h1 className={styles.title}>SweepBox</h1>
       </div>
       <button className={styles.logoutButton} onClick={handleLogout}>
         <svg

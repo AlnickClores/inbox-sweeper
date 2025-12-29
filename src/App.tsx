@@ -3,7 +3,7 @@ import "./App.css";
 function App() {
   return (
     <>
-      <h1>Inbox Sweeper</h1>
+      <h1>Sweep Box</h1>
     </>
   );
 }

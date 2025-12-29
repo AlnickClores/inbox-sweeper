@@ -251,7 +251,7 @@ function Popup() {
         <div className={loginStyles.container}>
           <div className={loginStyles.card}>
             <div>
-              <h1>Inbox Sweeper</h1>
+              <h1>SweepBox</h1>
               <p className={loginStyles.description}>
                 Clean up your Gmail inbox by identifying top sender and managing
                 your emails efficiently.
@@ -298,8 +298,8 @@ function Popup() {
               <span>Connect with Gmail</span>
             </button>
             <p>
-              By connecting, you allow Inbox Sweeper to access your Gmail
-              account to analyze sender frequency.
+              By connecting, you allow SweepBox to access your Gmail account to
+              analyze sender frequency.
             </p>
           </div>
         </div>
