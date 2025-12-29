@@ -1,0 +1,150 @@
+/* Backdrop */
+.confirmationBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+  transition: opacity 0.3s ease;
+  z-index: 40;
+}
+
+.confirmationModal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  padding: 20px;
+  max-width: 300px;
+  width: 300px;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 50;
+}
+
+.confirmationModal.show {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+
+.confirmationClose {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  color: #4b5563;
+}
+
+.confirmationClose:hover {
+  color: #111827;
+}
+
+.confirmationContent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.confirmationHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.confirmationTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.confirmationMessage {
+  font-size: 14px;
+  color: #4b5563;
+  margin: 0;
+}
+
+.confirmationEmailList {
+  background: #f9fafb;
+  border-radius: 8px;
+  margin: 12px 0;
+  padding: 12px;
+  max-height: 180px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.confirmationEmailItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.emailName {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #000000;
+}
+
+.emailAddress {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.confirmationActions {
+  display: flex;
+  gap: 12px;
+  padding-top: 16px;
+}
+
+.confirmationCancel {
+  flex: 1;
+  background: transparent;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px 0;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.confirmationCancel:hover {
+  background: #f3f4f6;
+}
+
+.confirmationConfirm {
+  flex: 1;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 0;
+  font-weight: 500;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.confirmTrash {
+  background: #ef4444;
+}
+
+.confirmTrash:hover {
+  background: #dc2626;
+}
+
+.confirmDelete {
+  background: #b91c1c;
+}
+
+.confirmDelete:hover {
+  background: #991b1b;
+}
+
+.confirmUnsubscribe {
+  background: #f97316;
+}
+
+.confirmUnsubscribe:hover {
+  background: #ea580c;
+}

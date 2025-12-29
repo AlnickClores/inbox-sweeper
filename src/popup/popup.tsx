@@ -4,12 +4,11 @@ import loginStyles from "./styles/login.module.css";
 import Navbar from "./components/Navbar";
 import Header from "./components/Header";
 import EmailList from "./components/EmailList";
-import ActionBar from "./components/ActionBar";
 import type { CachedMessage } from "./types/type";
 import type { Order } from "./types/type";
 
 type Sender = { email: string; count: number };
-type SelectedSender = { email: string; messageIds: string[] };
+type SelectedSender = { name: string; email: string; messageIds: string[] };
 
 function Popup() {
   const [name, setName] = useState<string | null>(null);
@@ -107,7 +106,12 @@ function Popup() {
     return sortedEmails.slice(0, visibleCount);
   }, [sortedEmails, visibleCount]);
 
-  const handleSelectEmail = (email: string, messageIds: string[]) => {
+  const handleSelectEmail = (
+    name: string,
+    email: string,
+    messageIds: string[]
+  ) => {
+    console.log("Email Name:", name);
     console.log("Email address:", email);
     console.log("Message IDs:", messageIds);
     setSelectedEmails((prev) => {
@@ -117,7 +121,7 @@ function Popup() {
         return prev.filter((item) => item.email !== email);
       }
 
-      return [...prev, { email, messageIds }];
+      return [...prev, { name, email, messageIds }];
     });
   };
 
@@ -207,13 +211,14 @@ function Popup() {
               order={order}
               onOrderChange={onOrderChange}
               handleSelectEmail={handleSelectEmail}
-              selectedEmails={selectedEmails.map((item) => item.email)}
+              selectedEmails={selectedEmails.map((item) => ({
+                name: item.name,
+                email: item.email,
+              }))}
               isScanning={isScanning}
+              handleTrashEmails={handleTrashEmails}
             />
           </div>
-          {selectedEmails.length > 0 && (
-            <ActionBar handleTrashEmails={handleTrashEmails} />
-          )}
         </>
       ) : (
         <div className={loginStyles.container}>

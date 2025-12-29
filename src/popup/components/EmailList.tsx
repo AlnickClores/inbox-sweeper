@@ -1,17 +1,25 @@
 import Filter from "./Filter";
 import SeeMoreBtn from "./SeeMoreBtn";
+import ConfirmationModal from "./ConfirmationModal";
+import ActionBar from "./ActionBar";
 import { EmailListSkeleton } from "./EmailListSkeleton";
 import type { CachedMessage } from "../types/type";
 import styles from "../styles/emails.module.css";
+import { useState } from "react";
 
 interface EmailListProps {
   cachedEmails: CachedMessage[];
   loadMore: () => void;
   order: "asc" | "desc";
   onOrderChange: (value: "asc" | "desc") => void;
-  handleSelectEmail: (email: string, messageIds: string[]) => void;
-  selectedEmails: string[];
+  handleSelectEmail: (
+    name: string,
+    email: string,
+    messageIds: string[]
+  ) => void;
+  selectedEmails: { name: string; email: string }[];
   isScanning: boolean;
+  handleTrashEmails: () => void;
 }
 
 const EmailList = ({
@@ -22,7 +30,37 @@ const EmailList = ({
   handleSelectEmail,
   selectedEmails,
   isScanning,
+  handleTrashEmails,
 }: EmailListProps) => {
+  const [confirmationModal, setConfirmationModal] = useState<{
+    isOpen: boolean;
+    action: "trash" | "delete" | "unsubscribe" | null;
+  }>({
+    isOpen: false,
+    action: null,
+  });
+
+  const handleActionClick = (action: "trash" | "delete" | "unsubscribe") => {
+    setConfirmationModal({ isOpen: true, action });
+  };
+
+  const handleConfirmAction = () => {
+    console.log("Confirmed action:", confirmationModal.action);
+
+    if (confirmationModal.action === "trash") {
+      handleTrashEmails();
+    } else if (confirmationModal.action === "delete") {
+      console.log("Handle delete action");
+    } else if (confirmationModal.action === "unsubscribe") {
+      console.log("Handle unsubscribe action");
+    }
+
+    setConfirmationModal({ isOpen: false, action: null });
+  };
+
+  const handleCloseModal = () => {
+    setConfirmationModal({ isOpen: false, action: null });
+  };
   return (
     <div>
       {isScanning ? (
@@ -33,13 +71,15 @@ const EmailList = ({
           <Filter order={order} onOrderChange={onOrderChange} />
           <div className={styles.emailList}>
             {cachedEmails.map((email) => {
-              const isChecked = selectedEmails.includes(email.email);
+              const isChecked = selectedEmails.some(
+                (item) => item.email === email.email
+              );
               return (
                 <div
                   key={email.email}
                   className={styles.emailItem}
                   onClick={() =>
-                    handleSelectEmail(email.email, email.messageIds)
+                    handleSelectEmail(email.name, email.email, email.messageIds)
                   }
                 >
                   <div className={styles.emailLeft}>
@@ -103,6 +143,15 @@ const EmailList = ({
           <SeeMoreBtn loadMore={loadMore} />
         </>
       )}
+      {selectedEmails.length > 0 && (
+        <ActionBar handleActionClick={handleActionClick} />
+      )}
+      <ConfirmationModal
+        selectedEmails={selectedEmails}
+        action={confirmationModal.action}
+        onConfirm={handleConfirmAction}
+        onCancel={handleCloseModal}
+      />
     </div>
   );
 };

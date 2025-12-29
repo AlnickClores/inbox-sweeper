@@ -1,13 +1,16 @@
 import styles from "../styles/actionbar.module.css";
 
 interface ActionBarProps {
-  handleTrashEmails: () => void;
+  handleActionClick: (action: "trash" | "delete" | "unsubscribe") => void;
 }
 
-const ActionBar = ({ handleTrashEmails }: ActionBarProps) => {
+const ActionBar = ({ handleActionClick }: ActionBarProps) => {
   return (
     <div className={styles.container}>
-      <button onClick={handleTrashEmails} className={styles.actionButton}>
+      <button
+        className={styles.actionButton}
+        onClick={() => handleActionClick("trash")}
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -28,7 +31,10 @@ const ActionBar = ({ handleTrashEmails }: ActionBarProps) => {
         </svg>
         Trash
       </button>
-      <button className={styles.actionButton}>
+      <button
+        className={styles.actionButton}
+        onClick={() => handleActionClick("delete")}
+      >
         <svg
           viewBox="0 0 16 16"
           fill="none"
@@ -48,7 +54,10 @@ const ActionBar = ({ handleTrashEmails }: ActionBarProps) => {
         </svg>
         Delete
       </button>
-      <button className={styles.actionButton}>
+      <button
+        className={styles.actionButton}
+        onClick={() => handleActionClick("unsubscribe")}
+      >
         <svg
           viewBox="0 0 16 16"
           fill="#6b7280"
