@@ -128,15 +128,42 @@ function Popup() {
   const handleTrashEmails = () => {
     const messageIdsToTrash = selectedEmails.flatMap((item) => item.messageIds);
 
-    console.log("Trashing emails with IDs:", messageIdsToTrash);
+    chrome.runtime.sendMessage(
+      {
+        type: "TRASH_EMAILS",
+        payload: messageIdsToTrash,
+      },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          console.error("Runtime error:", chrome.runtime.lastError.message);
+          alert("Failed to trash emails.");
+          return;
+        }
 
-    chrome.runtime.sendMessage({
-      type: "TRASH_EMAILS",
-      payload: messageIdsToTrash,
-    });
+        if (!response?.success) {
+          console.error("Trash failed:", response?.error);
+          alert("Failed to trash emails.");
+          return;
+        }
 
-    setRefreshKey((prev) => prev + 1);
-    setSelectedEmails([]);
+        setCachedEmails((prev) => {
+          const updatedEmails = prev.filter(
+            (email) => !selectedEmails.some((sel) => sel.email === email.email)
+          );
+
+          chrome.storage.local.set({ INBOX_DATA: updatedEmails }, () => {
+            if (chrome.runtime.lastError) {
+              console.error("Storage error:", chrome.runtime.lastError.message);
+            }
+          });
+
+          return updatedEmails;
+        });
+
+        setSelectedEmails([]);
+        setRefreshKey((prev) => prev + 1);
+      }
+    );
   };
 
   useEffect(() => {
