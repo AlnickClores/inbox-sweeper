@@ -20,6 +20,7 @@ interface EmailListProps {
   selectedEmails: { name: string; email: string }[];
   isScanning: boolean;
   handleTrashEmails: () => void;
+  handleDeleteEmails: () => void;
 }
 
 const EmailList = ({
@@ -31,6 +32,7 @@ const EmailList = ({
   selectedEmails,
   isScanning,
   handleTrashEmails,
+  handleDeleteEmails,
 }: EmailListProps) => {
   const [confirmationModal, setConfirmationModal] = useState<{
     isOpen: boolean;
@@ -50,7 +52,7 @@ const EmailList = ({
     if (confirmationModal.action === "trash") {
       handleTrashEmails();
     } else if (confirmationModal.action === "delete") {
-      console.log("Handle delete action");
+      handleDeleteEmails();
     } else if (confirmationModal.action === "unsubscribe") {
       console.log("Handle unsubscribe action");
     }

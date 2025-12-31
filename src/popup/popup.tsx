@@ -166,6 +166,49 @@ function Popup() {
     );
   };
 
+  const handleDeleteEmails = () => {
+    const messageIdsToDelete = selectedEmails.flatMap(
+      (email) => email.messageIds
+    );
+
+    chrome.runtime.sendMessage(
+      {
+        type: "DELETE_EMAILS",
+        payload: messageIdsToDelete,
+      },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          console.error("Runtime error:", chrome.runtime.lastError.message);
+          alert("Failed to delete emails.");
+          return;
+        }
+
+        if (!response?.success) {
+          console.error("Delete failed:", response?.error);
+          alert("Failed to delete emails.");
+          return;
+        }
+
+        setCachedEmails((prev) => {
+          const updatedEmails = prev.filter(
+            (email) => !selectedEmails.some((sel) => sel.email === email.email)
+          );
+
+          chrome.storage.local.set({ INBOX_DATA: updatedEmails }, () => {
+            if (chrome.runtime.lastError) {
+              console.error("Storage error:", chrome.runtime.lastError.message);
+            }
+          });
+
+          return updatedEmails;
+        });
+
+        setSelectedEmails([]);
+        setRefreshKey((prev) => prev + 1);
+      }
+    );
+  };
+
   useEffect(() => {
     console.log("Selected Emails:", selectedEmails);
   }, [selectedEmails]);
@@ -244,6 +287,7 @@ function Popup() {
               }))}
               isScanning={isScanning}
               handleTrashEmails={handleTrashEmails}
+              handleDeleteEmails={handleDeleteEmails}
             />
           </div>
         </>

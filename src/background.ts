@@ -366,4 +366,60 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
     return true;
   }
+
+  if (message.type === "DELETE_EMAILS") {
+    console.log("➡️ Message IDs:", message.payload);
+
+    const messageIds: string[] = message.payload;
+
+    chrome.storage.local.get(
+      "INBOX_TOKEN",
+      async (res: { INBOX_TOKEN?: string }) => {
+        const token = res.INBOX_TOKEN;
+
+        if (!token) {
+          sendResponse({ success: false, error: "Not logged in" });
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            "https://gmail.googleapis.com/gmail/v1/users/me/messages/batchDelete",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ ids: messageIds }),
+            }
+          );
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Gmail API error:", errorText);
+
+            sendResponse({
+              success: false,
+              error: errorText,
+            });
+            return;
+          }
+
+          sendResponse({
+            success: true,
+            count: messageIds.length,
+          });
+        } catch (error) {
+          console.error("Network or runtime error:", error);
+          sendResponse({
+            success: false,
+            error: String(error),
+          });
+        }
+      }
+    );
+
+    return true;
+  }
 });
