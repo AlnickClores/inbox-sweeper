@@ -94,6 +94,35 @@ function Popup() {
     setOrder(value);
   };
 
+  const buildGmailFromQuery = (emails: string[]) => {
+    if (emails.length === 1) {
+      return `from:(${emails[0]})`;
+    }
+
+    const joined = emails.join(" OR ");
+    return `from:(${joined})`;
+  };
+
+  const filterGmailBySenders = async (emails: string[]) => {
+    if (emails.length === 0) return;
+
+    const query = buildGmailFromQuery(emails);
+    const url = `https://mail.google.com/mail/u/0/#search/${encodeURIComponent(
+      query
+    )}`;
+
+    const [gmailTab] = await chrome.tabs.query({
+      url: "https://mail.google.com/*",
+      currentWindow: true,
+    });
+
+    if (gmailTab?.id) {
+      chrome.tabs.update(gmailTab.id, { url, active: true });
+    } else {
+      chrome.tabs.create({ url });
+    }
+  };
+
   const sortedEmails = useMemo(() => {
     return [
       ...cachedEmails.sort((a, b) =>
@@ -106,22 +135,25 @@ function Popup() {
     return sortedEmails.slice(0, visibleCount);
   }, [sortedEmails, visibleCount]);
 
-  const handleSelectEmail = (
+  const handleSelectEmail = async (
     name: string,
     email: string,
     messageIds: string[]
   ) => {
-    console.log("Email Name:", name);
-    console.log("Email address:", email);
-    console.log("Message IDs:", messageIds);
     setSelectedEmails((prev) => {
+      let next;
+
       const exists = prev.find((item) => item.email === email);
 
       if (exists) {
-        return prev.filter((item) => item.email !== email);
+        next = prev.filter((item) => item.email !== email);
+      } else {
+        next = [...prev, { name, email, messageIds }];
       }
 
-      return [...prev, { name, email, messageIds }];
+      filterGmailBySenders(next.map((i) => i.email));
+
+      return next;
     });
   };
 
@@ -209,6 +241,37 @@ function Popup() {
     );
   };
 
+  const handleUnsubscribeEmails = () => {
+    console.log("Handle unsubscribe emails");
+
+    const unsubscribePayload = selectedEmails.flatMap((email) =>
+      email.messageIds.map((messageId) => ({
+        messageId,
+        email: email.email,
+      }))
+    );
+
+    console.log("Unsubscribe Payload:", unsubscribePayload);
+
+    chrome.runtime.sendMessage(
+      {
+        type: "UNSUBSCRIBE_EMAILS",
+        payload: unsubscribePayload,
+      },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          console.error("Runtime error:", chrome.runtime.lastError.message);
+          alert("Failed to unsubscribe emails.");
+          return;
+        }
+        console.log("Unsubscribe response:", response);
+
+        setSelectedEmails([]);
+        setRefreshKey((prev) => prev + 1);
+      }
+    );
+  };
+
   useEffect(() => {
     console.log("Selected Emails:", selectedEmails);
   }, [selectedEmails]);
@@ -288,6 +351,7 @@ function Popup() {
               isScanning={isScanning}
               handleTrashEmails={handleTrashEmails}
               handleDeleteEmails={handleDeleteEmails}
+              handleUnsubscribeEmails={handleUnsubscribeEmails}
             />
           </div>
         </>
