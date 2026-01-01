@@ -21,6 +21,7 @@ interface EmailListProps {
   isScanning: boolean;
   handleTrashEmails: () => void;
   handleDeleteEmails: () => void;
+  handleUnsubscribeEmails: () => void;
 }
 
 const EmailList = ({
@@ -33,6 +34,7 @@ const EmailList = ({
   isScanning,
   handleTrashEmails,
   handleDeleteEmails,
+  handleUnsubscribeEmails,
 }: EmailListProps) => {
   const [confirmationModal, setConfirmationModal] = useState<{
     isOpen: boolean;
@@ -54,7 +56,7 @@ const EmailList = ({
     } else if (confirmationModal.action === "delete") {
       handleDeleteEmails();
     } else if (confirmationModal.action === "unsubscribe") {
-      console.log("Handle unsubscribe action");
+      handleUnsubscribeEmails();
     }
 
     setConfirmationModal({ isOpen: false, action: null });
@@ -79,13 +81,19 @@ const EmailList = ({
               return (
                 <div
                   key={email.email}
-                  className={styles.emailItem}
+                  className={`${styles.emailItem} ${
+                    isChecked ? styles.emailItemSelected : ""
+                  }`}
                   onClick={() =>
                     handleSelectEmail(email.name, email.email, email.messageIds)
                   }
                 >
                   <div className={styles.emailLeft}>
-                    <div className={styles.checkbox}>
+                    <div
+                      className={`${styles.checkbox} ${
+                        isChecked ? styles.checkboxChecked : ""
+                      }`}
+                    >
                       {isChecked && (
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -101,7 +109,7 @@ const EmailList = ({
                           <g id="Free Remix/Interface Essential/check--check-form-validation-checkmark-success-add-addition-tick">
                             <path
                               id="Vector 3969"
-                              stroke="#243cc4ff"
+                              stroke="#ffffff"
                               stroke-linecap="round"
                               stroke-linejoin="round"
                               stroke-width="2.5"

@@ -4,22 +4,52 @@
   margin: 20px 0px;
   padding: 20px 0px;
   border-radius: 12px;
-  gap: 12px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .emailItem {
+  position: relative;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
+  padding: 16px 16px;
   background-color: transparent;
   border: none;
   cursor: pointer;
 }
 
-.emailItem:hover {
+.emailItemSelected {
   background-color: #dbf0ff;
+}
+
+.emailItemSelected::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  background-color: #296cd8;
+  border-radius: 0 4px 4px 0;
+}
+
+.emailItem:hover {
+  background-color: #f0f9ff;
+}
+
+.emailItem::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 100%;
+  background-color: #296cd8;
+  transition: width 0.15s ease;
+}
+
+.emailItemSelected::before {
+  width: 4px;
 }
 
 .emailLeft {
@@ -37,6 +67,11 @@
   height: 16px;
   border: 2px solid #0000004d;
   border-radius: 4px;
+}
+
+.checkboxChecked {
+  background-color: #296cd8;
+  border-color: #296cd8;
 }
 
 .emailDetails {
