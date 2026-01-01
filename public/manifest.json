@@ -1,12 +1,19 @@
 {
   "manifest_version": 3,
   "name": "SweepBox",
-  "description": "Scan and clean your Gmail inbox by identifying frequent senders.",
+  "description": "Scan your Gmail inbox to identify frequent senders and easily unsubscribe from unwanted emails.",
   "version": "0.1.0",
   "action": {
     "default_popup": "/src/popup/index.html"
   },
+  "icons": {
+    "16": "/icons/sweepbox-logo16x16.png",
+    "32": "/icons/sweepbox-logo32x32.png",
+    "48": "/icons/sweepbox-logo48x48.png",
+    "128": "/icons/sweepbox-logo128x128.png"
+  },
   "permissions": ["identity", "storage"],
+  "host_permissions": ["https://*/*"],
   "oauth2": {
     "client_id": "1006173852414-u4nbddrq7rm904j5hgc3q6cj13de1arn.apps.googleusercontent.com",
     "scopes": [
